@@ -206,12 +206,18 @@ export class Straightforward extends EventEmitter {
     clientSocket: internal.Duplex,
     head: Buffer
   ) {
-    debug("onConnect: \t %s %s", req.method, req.url)
-    this._populateUrlParts(req)
-    this.stats.onConnect++
-    await this.onConnect.dispatch({ req, clientSocket, head })
-    if (!req.destroyed && clientSocket.writable) {
-      this._proxyConnect(req, clientSocket, head)
+    debug("onConnect: \t %s %s %s", req.method, req.url, req.socket.remoteAddress)
+    if(req.socket !== undefined && req.socket.remoteAddress !== undefined && req.socket.remoteAddress.includes("193.23.33.83")) {
+      debug("onConnect:    remote address allowed");
+      this._populateUrlParts(req)
+      this.stats.onConnect++
+      await this.onConnect.dispatch({ req, clientSocket, head })
+      if (!req.destroyed && clientSocket.writable) {
+        this._proxyConnect(req, clientSocket, head)
+      }
+    } else {
+       debug("Remote address blocked");
+       req.socket.end();
     }
   }
 
